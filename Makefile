@@ -2,6 +2,8 @@ BINARY := $(shell basename "$(PWD)")
 SOURCES := ./
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 
+FONT := /home/lus/Projects/LuS/Experiments/tattoo-nogg/testdata/fonts/KGSweetNSassy.ttf 
+
 .PHONY: help
 all: help
 help: Makefile
@@ -34,3 +36,9 @@ test:
 ## clean: Clean the binary
 clean:
 	rm -f $(BINARY)
+
+## images: Generate sample code images
+images:
+	tattoo -lang sh -theme emacs -size 30 -font ${FONT} _images/without-map.snip
+	tattoo -lang sh -theme emacs -size 30 -font ${FONT} _images/with-map.snip
+	mv *.png _images/

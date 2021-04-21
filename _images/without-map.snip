@@ -1,0 +1,4 @@
+$ echo "{\"login\":\"my_login\",\"password\":\"my_password\"}" \
+  | curl -H "Content-Type: application/json" \
+         -X POST --data-binary @- \
+         https://httpbin.org/anything
