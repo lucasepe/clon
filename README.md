@@ -1,11 +1,150 @@
-# map
+# clon
 
-> Generate JSON or YAML using a more convenient syntax for command line _"mumbo-jumbo"_.
+> A convenient syntax to generate JSON (or YAML) for commandline _"mumbo-jumbo"_.
+
+# Syntax Overview
+
+Syntax resembles that of JSON with a few caveats:
+
+- a field is a key/value pair
+- fields are separated by space (one or more)
+- curly braces hold objects
+- square brackets hold arrays
+
+## fields
+
+> A field is defined by: `IDENTIFIER = VALUE` .
+
+- field key/value pairs have a equal `=` between them as in `key = value` 
+- each field is separated by space (one or more does not matter)
+
+```sh
+$ clon firstName = Scarlett lastName = Johansson
+```
+
+generates...
+
+```json
+{
+   "firstName": "Scarlett",
+   "lastName": "Johansson"
+}
+```
+
+- values are treated as strings by default
+- other types (numbers, booleans, null) need to be prefixed with a colon `:` 
+  - es. `age = :30 customer = :true`
+- to refer to an environment variable prefix the value with a `^` 
+  - es. `bucket = ^S3_BUCKET`
+  - by default the `.env` file in the current folder is used, use the `-env-file` flag to change it)
+
+
+```sh
+$ clon fullName = \"Scarlett Johansson\" age = :36 hot = :true
+```
+
+generates...
+
+```json
+{
+   "age": 36,
+   "fullName": "Scarlett Johansson",
+   "hot": true
+}
+```
+
+## objects
+
+> An object is defined by: `IDENTIFIER = { fields... }`.
+
+- begin a new object using the left curly brace `{`
+- close the object with a right curly brace `}`
+
+```sh
+$ clon user = { name=foo age=:30 active=:true address = { zip=123 country=IT } }
+```
+
+generates...
+
+```json
+{
+   "user": {
+      "active": true,
+      "address": {
+         "country": "IT",
+         "zip": "123"
+      },
+      "age": 30,
+      "name": "foo"
+   }
+}
+```
+
+- you can also use dotted notation (and mix things)
+
+```sh
+$ clon user = { name=foo age=:30 active=:true address.zip=123 address.country=IT }
+```
+
+```sh
+$ clon user.name=foo user.age=:30 user.active=:true user.address = {zip=123 country=IT}
+```
+
+```sh
+$ clon user.name=foo user.age=:30 user.active=:true user.address.zip=123 user.address.country=IT
+```
+
+are all examples that generate the same JSON as above; it's up to you to find your way.
+
+
+## arrays
+
+> An array is defined by: `IDENTIFIER = [ fields...]`.
+
+- begin a new array using the left square brace `[`
+- end the array with a right quare brace `]`
+
+```sh
+$ clon tags = [ foo bar qix ]
+```
+
+```json
+{
+   "tags": [
+      "foo",
+      "bar",
+      "qix"
+   ]
+}
+```
+
+You can create an array of object too:
+
+```sh
+$ clon pets = [ { name=Dash kind=cat age=:3 } {name=Harley kind=dog age=:4} ]
+```
+
+```json
+{
+   "pets": [
+      {
+         "age": 3,
+         "kind": "cat",
+         "name": "Dash"
+      },
+      {
+         "age": 4,
+         "kind": "dog",
+         "name": "Harley"
+      }
+   ]
+}
+```
 
 # Usage
 
 ```bash
-$ map user = { name=foo age=:30 type=C address.zip=123 address.country=Italy }
+$ clon user = { name=foo age=:30 type=C address.zip=123 address.country=Italy }
 ```
 
 generates...
@@ -24,167 +163,23 @@ generates...
 }
 ```
 
-if you want a YAML output, use the `-f` flag:
-
-
-```bash
-$ map -f yaml user = { name=foo age=:30 type=C address.zip=123 address.country=Italy }
-```
-```yaml
-user:
-  address:
-    country: Italy
-    zip: "123"
-  age: 30
-  name: foo
-  type: C
-```
-
-## Syntax
-
-Syntax resembles that of JSON with a few caveats:
-
-- uses the `=` sign instead of `:` to separate a field and its value (es. `name=foo`)
-- strings are not quoted (unless they contain spaces)
-- values are treated as strings by default
-- other types (numbers, booleans, null) need to be prefixed with a `:` (es. `age=:30`)
-- no commas required to separate elements of an object or array (es. `name=foo age=:30`)
-- prefix the literals with `+` to read value from environment variables (es. `apiVersion=+API_VERSION`)
-
-## fields
-
-> A field is defined by: `IDENTIFIER = [:|+]VALUE` .
-
-Example:
-
-```bash
-$ API_SECRET=abbracadabra map name=Pinco age=:30 secret=+API_SECRET
-```
-
-- the value of field `name` is a string
-- the value of field `age` is a number (has a `:` prefix)
-- the value of field `secret` is read from environment variables
-
-output is:
-
-```json
-{
-   "age": 30,
-   "name": "Pinco",
-   "secret": "abbracadabbra"
-}
-```
-
-## nested fields
-
-> A nested field is defined by: `PARENT.IDENTIFIER = [:|+]VALUE` .
-
-Example:
-
-```bash
-$ map user.name=Pinco user.age=:30 user.address.zip=123 user.address.country=CA
-```
-```json
-{
-   "user": {
-      "address": {
-         "country": "CA",
-         "zip": "123"
-      },
-      "age": 30,
-      "name": "Pinco"
-   }
-}
-```
-
-## objects
-
-> An object is defined by: `IDENTIFIER = { fields... }`.
-
-Example:
-
-
-```bash
-$ map -f yaml user = { name=Pinco age=:30 address = { zip=123 country=CA } }
-```
-
-```yaml
-user:
-  address:
-    country: CA
-    zip: "123"
-  age: 30
-  name: Pinco
-```
-
-## arrays
-
-> An array is defined by: `IDENTIFIER = [ fields...]`.
-
-Example:
-
-```bash
-$ map tags = [ foo bar qix ]
-```
-
-```json
-{
-   "tags": [
-      "foo",
-      "bar",
-      "qix"
-   ]
-}
-```
-
-## Why?
-
-Let's consider the case in which we want to send a JSON payload to a ReST API via shell.
-
-What is simpler and more readable? ...the standard way...
-
-```bash
-$ echo "{\"login\":\"my_login\",\"password\":\"my_password\"}" \
-  | curl -H "Content-Type: application/json" \
-         -X POST --data-binary @- \
-         https://httpbin.org/anything
-```
-
-or something neat like this:
-
-```bash
-$ map login=my_login password=my_password \
-  | curl -H "Content-Type: application/json" \
-         -X POST --data-binary @- \
-         https://httpbin.org/anything
-```
-
-
-## Use Cases
+## Use Cases ?
 
 ### Create `JSON` payload and POST it with `cURL`
 
-```bash
-$ map user = { name=Pinco age=:30 address = { zip=123 country=CA } } \
+```sh
+$ clon user = { name=Pinco age=:30 address = { zip=123 country=CA } } \
   | curl -H "Content-Type: application/json" \
          -X POST --data-binary @- \
          https://httpbin.org/anything
 ```
 
-### Create a Kubernetes deployment
+### Elasticsearch query string query
 
-```bash
-$ map -f yaml apiVersion=apps/v1 kind=Deployment \
-      metadata = { name=nginx-deployment labels.app=nginx } \
-      spec = { \
-        replicas=:3 selector.matchLabels.app=nginx \
-        template = { \
-           metadata.labels.app=nginx \
-           spec.containers = [ { name=nginx image=\"nginx:1.7.9\" ports=[containerPort=:80] } ] \
-         }} \
+```sh
+$ clon query.query_string.query = \"new york city\" \
   | curl -H "Content-Type: application/json" \
-         -X POST --data-binary @- \
-         http://localhost:8080/apis/apps/v1/namespaces/kube-system/deployments
+         --data-binary @- http://localhost:9200/_search
 ```
 
 # How to install?
@@ -215,5 +210,6 @@ Thanks to [@jawher](https://github.com/jawher) for the amazing [jg](https://gith
 What I changed? 
 
 - lexer and parser now can resolve attribute values ​​from environment variables
+- dotenv files support
 - additional YAML format encoding
 - go modules support

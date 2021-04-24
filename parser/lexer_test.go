@@ -1,4 +1,4 @@
-package builder
+package parser
 
 import (
 	"testing"
@@ -33,8 +33,8 @@ func TestLexerSingleTokens(t *testing.T) {
 		{".", token{class: tkDot, value: ".", pos: 0}},
 		{"", token{class: tkEOF, value: "", pos: 0}},
 
-		{"+A", token{class: tkEnvLiteral, value: "A", pos: 1}},
-		{"+API_VERSION", token{class: tkEnvLiteral, value: "API_VERSION", pos: 1}},
+		{"^A", token{class: tkEnvVar, value: "A", pos: 1}},
+		{"^API_VERSION", token{class: tkEnvVar, value: "API_VERSION", pos: 1}},
 	}
 
 	for _, cas := range cases {

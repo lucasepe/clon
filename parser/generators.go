@@ -1,4 +1,4 @@
-package builder
+package parser
 
 import (
 	"fmt"
@@ -6,18 +6,13 @@ import (
 	"strconv"
 )
 
-type Generator interface {
-	Gen() Any
-	Merge(Generator) Generator
-}
-
 type Any interface{}
 
 type Value struct {
 	value Any
 }
 
-func (v Value) Gen() Any {
+func (v Value) Do() Any {
 	return v.value
 }
 
@@ -26,16 +21,27 @@ func (v Value) Merge(g Generator) Generator {
 	return g
 }
 
-type Fields map[string]Generator
+type Generator interface {
+	Do() Any
+	Merge(Generator) Generator
+}
 
 type Obj struct {
-	fields Fields
+	fields map[string]Generator
 }
 
 func NewObj() Obj {
 	return Obj{
-		fields: Fields{},
+		fields: map[string]Generator{},
 	}
+}
+
+func (obj Obj) Do() Any {
+	res := map[string]Any{}
+	for field, valueGen := range obj.fields {
+		res[field] = valueGen.Do()
+	}
+	return res
 }
 
 func (obj Obj) Merge(g Generator) Generator {
@@ -56,14 +62,6 @@ func (obj Obj) Merge(g Generator) Generator {
 	}
 }
 
-func (obj Obj) Gen() Any {
-	res := map[string]Any{}
-	for field, valueGen := range obj.fields {
-		res[field] = valueGen.Gen()
-	}
-	return res
-}
-
 func (obj Obj) Add(field string, value Generator) Obj {
 	existingGenerator, found := obj.fields[field]
 	if found {
@@ -80,10 +78,10 @@ func (arr Arr) Merge(g Generator) Generator {
 	return g
 }
 
-func (arr Arr) Gen() Any {
+func (arr Arr) Do() Any {
 	res := make([]Any, len(arr))
 	for idx, elemGen := range arr {
-		res[idx] = elemGen.Gen()
+		res[idx] = elemGen.Do()
 	}
 	return res
 }

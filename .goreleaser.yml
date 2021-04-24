@@ -1,7 +1,7 @@
 # This is an example goreleaser.yaml file with some sane defaults.
 # Make sure to check the documentation at http://goreleaser.com
 # Run locally with: goreleaser --rm-dist --snapshot --skip-publish
-project_name: map
+project_name: joy
 before:
   hooks:
     - go mod tidy
@@ -12,27 +12,14 @@ builds:
   env:
     - CGO_ENABLED=0
   ldflags:
-    - -s -w -X main.gitCommit={{.Commit}}
+    - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
     - -a -extldflags "-static"
   goos:
-    - windows
-    - linux
-    - darwin
+      - windows
+      - linux
+      - darwin
   goarch:
-    - arm
-    - arm64
-    - amd64
-  goarm:
-    - 7
-  ignore:
-    - goos: darwin
-      goarch: arm
-    - goos: darwin
-      goarch: arm64
-    - goos: windows
-      goarch: arm
-    - goos: windows
-      goarch: arm64
+      - amd64
 archives:
 - replacements:
     darwin: macOS
@@ -44,11 +31,11 @@ snapshot:
   name_template: "{{ .ProjectName }}_{{ .Tag }}"
 nfpms:
   -
-    package_name: map
+    package_name: joy
     vendor: Luca Sepe
     homepage: https://lucasepe.it/
     maintainer: Luca Sepe <luca.sepe@gmail.com>
-    description: Generate JSON or YAML from the command-line.
+    description: Generate JSON or YAML (joy) from the command-line.
     license: MIT
     replacements:
       amd64: 64-bit

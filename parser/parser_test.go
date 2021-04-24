@@ -1,4 +1,4 @@
-package builder
+package parser
 
 import (
 	"os"
@@ -17,7 +17,7 @@ func TestParseFieldGenerator(t *testing.T) {
 		expected Generator
 	}{
 		{
-			input:    `a=+API_VERSION`,
+			input:    `a=^API_VERSION`,
 			expected: oneFieldObjGen("a", "v1"),
 		},
 		{
@@ -64,7 +64,7 @@ func TestParseFieldGenerator(t *testing.T) {
 	for _, cas := range testCases {
 		t.Logf("Testing input: %s", cas.input)
 
-		ast, err := Parse(cas.input)
+		ast, err := ParseString(cas.input)
 
 		require.NoError(t, err)
 		require.Equal(t, []Generator{cas.expected}, ast)
@@ -79,9 +79,9 @@ func TestParseObjectGenerator(t *testing.T) {
 		{
 			input: `a={b=c}`,
 			expected: Obj{
-				fields: Fields{
+				fields: map[string]Generator{
 					"a": Obj{
-						fields: Fields{
+						fields: map[string]Generator{
 							"b": Value{value: "c"},
 						},
 					},
@@ -93,7 +93,7 @@ func TestParseObjectGenerator(t *testing.T) {
 	for _, cas := range testCases {
 		t.Logf("Testing input: %s", cas.input)
 
-		ast, err := Parse(cas.input)
+		ast, err := ParseString(cas.input)
 
 		require.NoError(t, err)
 		require.Equal(t, []Generator{cas.expected}, ast)
@@ -108,11 +108,11 @@ func TestParseDotObjectGenerator(t *testing.T) {
 		{
 			input: `a."b.b".c=d`,
 			expected: Obj{
-				fields: Fields{
+				fields: map[string]Generator{
 					"a": Obj{
-						fields: Fields{
+						fields: map[string]Generator{
 							"b.b": Obj{
-								fields: Fields{
+								fields: map[string]Generator{
 									"c": Value{value: "d"},
 								},
 							},
@@ -124,9 +124,9 @@ func TestParseDotObjectGenerator(t *testing.T) {
 		{
 			input: `parent.child1=value1 parent.child2=value2`,
 			expected: Obj{
-				fields: Fields{
+				fields: map[string]Generator{
 					"parent": Obj{
-						fields: Fields{
+						fields: map[string]Generator{
 							"child1": Value{value: "value1"},
 							"child2": Value{value: "value2"},
 						},
@@ -139,7 +139,7 @@ func TestParseDotObjectGenerator(t *testing.T) {
 	for _, cas := range testCases {
 		t.Logf("Testing input: %s", cas.input)
 
-		ast, err := Parse(cas.input)
+		ast, err := ParseString(cas.input)
 
 		require.NoError(t, err)
 		require.Equal(t, []Generator{cas.expected}, ast)
@@ -148,24 +148,24 @@ func TestParseDotObjectGenerator(t *testing.T) {
 
 func TestComplexParse(t *testing.T) {
 	expected := Obj{
-		fields: Fields{
+		fields: map[string]Generator{
 			"id":      Value{value: "42"},
 			"enabled": Value{value: true},
 			"caller": Obj{
-				fields: Fields{
+				fields: map[string]Generator{
 					"gender": Obj{
-						fields: Fields{
+						fields: map[string]Generator{
 							"code": Value{value: int64(1)},
 						},
 					},
 				},
 			},
 			"customer": Obj{
-				fields: Fields{
+				fields: map[string]Generator{
 					"name": Value{value: "Geralt"},
 					"age":  Value{value: "86"},
 					"address": Obj{
-						fields: Fields{
+						fields: map[string]Generator{
 							"zip": Value{value: "75018"},
 						},
 					},
@@ -174,7 +174,7 @@ func TestComplexParse(t *testing.T) {
 		},
 	}
 
-	ast, err := Parse(`id = 42 caller.gender.code = :1  customer={name = "Geralt" age  = 86 address.zip = 75018 } enabled = :true`)
+	ast, err := ParseString(`id = 42 caller.gender.code = :1  customer={name = "Geralt" age  = 86 address.zip = 75018 } enabled = :true`)
 
 	require.NoError(t, err)
 	require.Equal(t, []Generator{expected}, ast)

@@ -1,4 +1,4 @@
-package builder
+package parser
 
 import (
 	"testing"
@@ -24,7 +24,7 @@ func TestValue(t *testing.T) {
 	for _, cas := range cases {
 		v := Value{value: cas}
 
-		require.Equal(t, cas, v.Gen())
+		require.Equal(t, cas, v.Do())
 
 		for _, otherGen := range otherGens {
 			// Merge of a value wih another generator should always return the other
@@ -41,7 +41,7 @@ func TestArr(t *testing.T) {
 		g.Add(Value{value: v})
 	}
 
-	require.Equal(t, values, g.Gen())
+	require.Equal(t, values, g.Do())
 
 	otherGens := []Generator{
 		NewObj(),
@@ -68,7 +68,7 @@ func TestObj(t *testing.T) {
 		g.Add(field, Value{value: value})
 	}
 
-	require.Equal(t, fields, g.Gen())
+	require.Equal(t, fields, g.Do())
 }
 
 func TestObjMerge(t *testing.T) {

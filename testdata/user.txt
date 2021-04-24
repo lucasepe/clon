@@ -1,0 +1,4 @@
+user = {
+   firstName=John lastName=Smith age=:25 verified=:true
+   address = { city="New York" state=NY zip=10021 }
+}

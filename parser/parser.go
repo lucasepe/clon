@@ -1,4 +1,4 @@
-package builder
+package parser
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ func (e ParseError) Error() string {
 Parse accepts an input string and the list and types of valid fields and returns either a matcher expression if the query
 is valid, or else an error
 */
-func Parse(input string) ([]Generator, error) {
+func ParseString(input string) ([]Generator, error) {
 	lexer := newLexer(input)
 	return (&parser{
 		lexer: lexer,
@@ -96,7 +96,7 @@ func (p *parser) arr() Generator {
 	res := Arr{}
 	for {
 		switch {
-		case p.found(tkEnvLiteral):
+		case p.found(tkEnvVar):
 			envValue, err := parseEnvValue(p.matched.value)
 			if err != nil {
 				panic("Invalid literal")
@@ -159,7 +159,7 @@ func (p *parser) value() Generator {
 	switch {
 	case p.found(tkLiteral):
 		return Value{value: p.matched.value}
-	case p.found(tkEnvLiteral):
+	case p.found(tkEnvVar):
 		envValue, err := parseEnvValue(p.matched.value)
 		if err != nil {
 			panic("Invalid literal")
@@ -195,9 +195,8 @@ func (p *parser) peek(class tokenClass) bool {
 }
 
 func (p *parser) found(class tokenClass) bool {
-	if p.next.class == class {
-		p.matched = p.next
-		p.next = p.lexer.next()
+	if p.peek(class) {
+		p.advance()
 		return true
 	}
 	return false

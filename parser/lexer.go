@@ -1,4 +1,4 @@
-package builder
+package parser
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ const (
 	tkDot        tokenClass = "."
 	tkLiteral    tokenClass = "LITERAL"
 	tkRawLiteral tokenClass = ":LITERAL"
-	tkEnvLiteral tokenClass = "+LITERAL"
+	tkEnvVar     tokenClass = "ENV_VAR"
 	tkAssign     tokenClass = "="
 	tkEOF        tokenClass = "$"
 )
@@ -70,9 +70,9 @@ func (lx *lexer) next() token {
 		case r == ':':
 			lx.drop()
 			return lx.lexRawLiteral()
-		case r == '+':
+		case r == '^':
 			lx.drop()
-			return lx.lexEnvLiteral()
+			return lx.lexEnvVar()
 		default:
 			return lx.lexLiteral()
 		}
@@ -99,12 +99,12 @@ func (lx *lexer) lexRawLiteral() token {
 	return lx.emit(tkRawLiteral)
 }
 
-func (lx *lexer) lexEnvLiteral() token {
+func (lx *lexer) lexEnvVar() token {
 	for notIn(lx.peek(), notOkInLiteral) {
 		lx.pop()
 	}
 
-	return lx.emit(tkEnvLiteral)
+	return lx.emit(tkEnvVar)
 }
 
 func (lx *lexer) lexString() token {
